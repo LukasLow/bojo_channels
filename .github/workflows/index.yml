@@ -25,9 +25,9 @@ jobs:
           wc -l index/packages.jsonl
       - name: publish
         run: |
-          cp index/packages.jsonl site/packages.jsonl
+          cp index/packages.jsonl docs/packages.jsonl
           git config user.name "bojo index"
           git config user.email "index@users.noreply.github.com"
-          git add site/packages.jsonl
+          git add docs/packages.jsonl
           git commit -m "index: nightly build" || echo "no changes"
           git push
