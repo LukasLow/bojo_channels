@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>bojo index</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+<header class="border-b border-slate-200 bg-white">
+  <div class="mx-auto max-w-5xl px-6 py-5 flex items-center gap-4">
+    <a href="#" class="text-xl font-semibold tracking-tight">bojo<span class="text-emerald-600">.</span>index</a>
+    <input id="q" type="search" placeholder="Search packages, keywords, repositories…"
+      class="ml-auto w-full max-w-md rounded-lg border border-slate-300 px-4 py-2 text-sm
+             focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100">
+  </div>
+</header>
+
+<main class="mx-auto max-w-5xl px-6 py-8">
+  <div class="flex items-center justify-between text-sm text-slate-500 mb-4">
+    <span id="count">loading…</span>
+    <span id="stamp"></span>
+  </div>
+  <ul id="list" class="divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white"></ul>
+
+  <section id="detail" class="hidden rounded-xl border border-slate-200 bg-white p-6">
+    <a href="#" class="text-sm text-emerald-700 hover:underline">← back</a>
+    <h2 id="d-path" class="mt-3 text-2xl font-semibold break-all"></h2>
+    <p id="d-desc" class="mt-2 text-slate-600"></p>
+    <div class="mt-4">
+      <div class="text-xs uppercase tracking-wide text-slate-400">install</div>
+      <pre id="d-cmd" class="mt-1 overflow-x-auto rounded-lg bg-slate-900 p-3 text-sm text-slate-100"></pre>
+    </div>
+    <h3 class="mt-6 text-sm font-semibold uppercase tracking-wide text-slate-500">versions</h3>
+    <table class="mt-2 w-full text-sm">
+      <thead class="text-left text-slate-500"><tr><th class="py-1">tag</th><th>flags</th><th>dependencies</th></tr></thead>
+      <tbody id="d-versions" class="divide-y divide-slate-100"></tbody>
+    </table>
+  </section>
+</main>
+
+<script>
+const state = { all: [], byPath: new Map() };
+
+function badge(t, cls) {
+  const s = document.createElement("span");
+  s.textContent = t;
+  s.className = "rounded px-1.5 py-0.5 text-xs font-medium " + cls;
+  return s;
+}
+
+function row(e) {
+  const a = document.createElement("a");
+  a.href = "#/" + e.path;
+  a.className = "block px-4 py-3 hover:bg-slate-50";
+  const top = document.createElement("div");
+  top.className = "flex flex-wrap items-baseline gap-2";
+  const name = document.createElement("span");
+  name.className = "font-medium text-slate-900 break-all";
+  name.textContent = e.path;
+  const ver = document.createElement("span");
+  ver.className = "text-xs text-slate-500";
+  ver.textContent = e.version;
+  top.append(name, ver);
+  if (e.ffi) top.append(badge("ffi", "bg-amber-100 text-amber-800"));
+  if (e.runtime) top.append(badge("runtime", "bg-sky-100 text-sky-800"));
+  const desc = document.createElement("div");
+  desc.className = "mt-0.5 text-sm text-slate-600";
+  desc.textContent = e.description || "";
+  a.append(top, desc);
+  return a;
+}
+
+function render() {
+  const q = document.getElementById("q").value.trim().toLowerCase();
+  const hits = state.all.filter(e =>
+    !q || (e.path + " " + (e.description || "") + " " + (e.keywords || []).join(" ")).toLowerCase().includes(q));
+  const list = document.getElementById("list");
+  list.replaceChildren(...hits.map(row));
+  document.getElementById("count").textContent =
+    hits.length + " of " + state.all.length + " package versions";
+}
+
+function showDetail(path) {
+  const versions = state.byPath.get(path) || [];
+  if (!versions.length) return false;
+  const last = versions[versions.length - 1];
+  document.getElementById("list").classList.add("hidden");
+  document.getElementById("detail").classList.remove("hidden");
+  document.getElementById("d-path").textContent = path;
+  document.getElementById("d-desc").textContent = last.description || "";
+  const parts = path.split(".");
+  const lib = parts.pop();
+  const repo = "https://" + parts.join("/");
+  document.getElementById("d-cmd").textContent =
+    "bojo get " + repo + "@" + last.version + " --lib " + lib;
+  const body = document.getElementById("d-versions");
+  body.replaceChildren(...versions.map(v => {
+    const tr = document.createElement("tr");
+    const td = (txt) => { const c = document.createElement("td"); c.className = "py-1"; c.textContent = txt; return c; };
+    const flags = [v.ffi ? "ffi" : "", v.runtime ? "runtime" : ""].filter(Boolean).join(" ") || "—";
+    tr.append(td(v.version), td(flags), td((v.deps || []).join("\n") || "—"));
+    return tr;
+  }));
+  return true;
+}
+
+function route() {
+  const path = decodeURIComponent(location.hash.replace(/^#\/?/, ""));
+  document.getElementById("detail").classList.add("hidden");
+  document.getElementById("list").classList.remove("hidden");
+  if (path && showDetail(path)) return;
+  render();
+}
+
+async function load() {
+  const res = await fetch("packages.jsonl", { cache: "no-cache" });
+  if (!res.ok) { document.getElementById("count").textContent = "no index yet"; return; }
+  const text = await res.text();
+  state.all = text.split("\n").filter(Boolean).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+  for (const e of state.all) {
+    if (!state.byPath.has(e.path)) state.byPath.set(e.path, []);
+    state.byPath.get(e.path).push(e);
+  }
+  for (const [, v] of state.byPath) v.sort((a, b) => a.version.localeCompare(b.version, undefined, { numeric: true }));
+  document.getElementById("stamp").textContent = "last build " + new Date(res.headers.get("last-modified") || Date.now()).toLocaleString();
+  render();
+}
+
+document.getElementById("q").addEventListener("input", () => { location.hash = ""; render(); });
+window.addEventListener("hashchange", route);
+load().then(route);
+</script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+name: index
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+      - name: install bojo
+        run: go install github.com/LukasLow/bojo/cmd/bojo@latest
+      - name: build the index
+        run: |
+          : > index/packages.jsonl
+          while read -r repo; do
+            [ -z "$repo" ] && continue
+            bojo repo-index "$repo" --follow >> index/packages.jsonl || echo "skip $repo"
+          done < channels.txt
+          wc -l index/packages.jsonl
+      - name: publish
+        run: |
+          cp index/packages.jsonl site/packages.jsonl
+          git config user.name "bojo index"
+          git config user.email "index@users.noreply.github.com"
+          git add site/packages.jsonl
+          git commit -m "index: nightly build" || echo "no changes"
+          git push
