@@ -72,16 +72,22 @@
 <script>
 const state = { all: [], byPath: new Map() };
 const parts = p => p.split(".");
-const repoPath = e => parts(e.path).slice(0, -1).join("/");
-const repoLabel = e => parts(e.path).slice(0, -1).join(".");
+// The module path is dotted; a forge URL needs the host as one label and the
+// rest as slashes: github.com + owner + repo.
+const repoLabel = e => {
+  const p = parts(e.path);
+  return p[0] + "." + p[1] + "/" + p.slice(2, -1).join("/");
+};
 const repoURL = e => "https://" + repoLabel(e);
-const treeURL = e => repoURL(e) + "/tree/" + e.tag + "/" + (e.dir || "");
+const treeURL = e => repoURL(e) + "/tree/" + (e.tag || e.version) + "/" + (e.dir || "");
 const rawURL = (e, file) => {
-  const host = parts(e.path)[0];
-  const rest = parts(e.path).slice(1, -1).join("/");
-  if (host === "github") return "https://raw.githubusercontent.com/" + rest + "/" + e.tag + "/" + (e.dir || "") + "/" + file;
-  if (host === "gitlab") return "https://gitlab.com/" + rest + "/-/raw/" + e.tag + "/" + (e.dir || "") + "/" + file;
-  return repoURL(e) + "/raw/" + e.tag + "/" + (e.dir || "") + "/" + file;
+  const p = parts(e.path);
+  const host = p[0] + "." + p[1];
+  const rest = p.slice(2, -1).join("/");
+  const ref = e.tag || e.version;
+  if (host === "github.com") return "https://raw.githubusercontent.com/" + rest + "/" + ref + "/" + (e.dir || "") + "/" + file;
+  if (host === "gitlab.com") return "https://gitlab.com/" + rest + "/-/raw/" + ref + "/" + (e.dir || "") + "/" + file;
+  return "https://" + host + "/" + rest + "/raw/" + ref + "/" + (e.dir || "") + "/" + file;
 };
 
 function badge(text, cls) {
