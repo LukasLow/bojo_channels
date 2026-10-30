@@ -201,7 +201,8 @@ function showDetail(path) {
   if ((last.keywords || []).length) meta("keywords", last.keywords.join(", "));
   if (last.ffi) meta("native", "ffi");
   if ((last.hooks || []).length) meta("hooks", last.hooks.join(", ") + "  (runs only after bojo allow)");
-  if (last.docs) meta("docs", last.docs + "  (bojo docs " + last.pkg + ")");
+  const docsDir = (last.docs || "docs").replace(/\/$/, "");
+  meta("docs", docsDir + "/index.md ↗", treeURL(last) + "/" + docsDir + "/index.md");
 
   const body = document.getElementById("d-versions");
   body.replaceChildren(...versions.slice().reverse().map(v => {

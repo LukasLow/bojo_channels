@@ -5,5 +5,5 @@
 {"path":"github.com.LukasLow.bojo_demo_pkg.randomname","pkg":"randomname","dir":"lib/randomname","version":"v0.0.1","tag":"randomname@v0.0.1","runtime":true}
 {"path":"github.com.LukasLow.bojo_demo_pkg.rssum","pkg":"rssum","dir":"lib/rssum","version":"v0.0.1","tag":"rssum@v0.0.1","ffi":true}
 {"path":"github.com.LukasLow.bojo_demo_pkg.tls","pkg":"tls","dir":"lib/tls","version":"v0.0.1","tag":"tls@v0.0.1","ffi":true}
-{"path":"github.com.LukasLow.bojo_demo_pkg.z","pkg":"z","dir":"lib/z","version":"unreleased","tag":""}
+{"path":"github.com.LukasLow.bojo_demo_pkg.z","pkg":"z","dir":"lib/z","version":"v0.0.1","tag":"z@v0.0.1"}
 {"path":"github.com.LukasLow.mojolib.request","pkg":"request","dir":"libs/request","version":"v0.0.1","tag":"request@v0.0.1","description":"HTTP GET through libcurl, compiled by the consumer","keywords":["http","network","curl","requests"],"license":"Apache-2.0","homepage":"https://github.com/LukasLow/mojolib","ffi":true}
