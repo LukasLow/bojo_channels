@@ -1,114 +1,220 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="bg-black">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>bojo index</title>
+<title>bojo.index</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased">
-<header class="border-b border-slate-200 bg-white">
-  <div class="mx-auto max-w-5xl px-6 py-5 flex items-center gap-4">
-    <a href="#" class="text-xl font-semibold tracking-tight">bojo<span class="text-emerald-600">.</span>index</a>
-    <input id="q" type="search" placeholder="Search packages, keywords, repositories…"
-      class="ml-auto w-full max-w-md rounded-lg border border-slate-300 px-4 py-2 text-sm
-             focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100">
+<body class="min-h-screen bg-black text-neutral-200 antialiased">
+
+<header class="border-b border-neutral-900 bg-black sticky top-0 z-10">
+  <div class="mx-auto max-w-4xl px-6 py-4 flex items-center gap-4">
+    <a href="#" class="text-lg font-semibold tracking-tight text-white">bojo<span class="text-emerald-400">.</span>index</a>
+    <div class="ml-auto w-full max-w-sm">
+      <input id="q" type="search" placeholder="Search packages…"
+        class="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-1.5 text-sm text-neutral-200 placeholder-neutral-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/40">
+    </div>
   </div>
 </header>
 
-<main class="mx-auto max-w-5xl px-6 py-8">
-  <div class="flex items-center justify-between text-sm text-slate-500 mb-4">
-    <span id="count">loading…</span>
-    <span id="stamp"></span>
-  </div>
-  <ul id="list" class="divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white"></ul>
-
-  <section id="detail" class="hidden rounded-xl border border-slate-200 bg-white p-6">
-    <a href="#" class="text-sm text-emerald-700 hover:underline">← back</a>
-    <h2 id="d-path" class="mt-3 text-2xl font-semibold break-all"></h2>
-    <p id="d-desc" class="mt-2 text-slate-600"></p>
-    <div class="mt-4">
-      <div class="text-xs uppercase tracking-wide text-slate-400">install</div>
-      <pre id="d-cmd" class="mt-1 overflow-x-auto rounded-lg bg-slate-900 p-3 text-sm text-slate-100"></pre>
+<main class="mx-auto max-w-4xl px-6 py-6">
+  <section id="browse">
+    <div class="flex items-baseline justify-between text-xs text-neutral-500 mb-3">
+      <span id="count">loading…</span><span>updated nightly</span>
     </div>
-    <h3 class="mt-6 text-sm font-semibold uppercase tracking-wide text-slate-500">versions</h3>
-    <table class="mt-2 w-full text-sm">
-      <thead class="text-left text-slate-500"><tr><th class="py-1">tag</th><th>flags</th><th>dependencies</th></tr></thead>
-      <tbody id="d-versions" class="divide-y divide-slate-100"></tbody>
-    </table>
+    <ul id="list" class="divide-y divide-neutral-900 rounded-xl border border-neutral-900 bg-neutral-950 overflow-hidden"></ul>
+  </section>
+
+  <section id="detail" class="hidden">
+    <a href="#" class="text-sm text-emerald-400 hover:underline">← all packages</a>
+
+    <div class="mt-3 flex items-start gap-4">
+      <div class="min-w-0">
+        <h1 class="text-2xl font-semibold text-white"><span id="d-pkg"></span>
+          <span id="d-ver" class="ml-1 rounded bg-neutral-800 px-1.5 py-0.5 align-middle text-[11px] font-normal text-neutral-300"></span>
+        </h1>
+        <p id="d-desc" class="mt-1 text-neutral-400"></p>
+      </div>
+      <a id="d-repo" target="_blank" rel="noreferrer"
+         class="ml-auto shrink-0 text-xs text-neutral-500 hover:text-emerald-400"></a>
+    </div>
+
+    <div class="mt-6">
+      <div class="text-[11px] uppercase tracking-wide text-neutral-500">install</div>
+      <div class="mt-1 flex items-center gap-2">
+        <pre id="d-cmd" class="flex-1 overflow-x-auto rounded-lg border border-neutral-900 bg-neutral-950 p-3 text-sm text-emerald-300"></pre>
+        <button id="d-copy" class="rounded-md border border-neutral-800 px-2 py-1 text-xs text-neutral-400 hover:text-neutral-200">copy</button>
+      </div>
+    </div>
+
+    <dl id="d-meta" class="mt-6 grid grid-cols-[7rem_1fr] gap-y-2 text-sm"></dl>
+
+    <div id="d-readme-wrap" class="mt-8 hidden border-t border-neutral-900 pt-5">
+      <div class="text-[11px] uppercase tracking-wide text-neutral-500">readme</div>
+      <div id="d-readme" class="mt-2 rounded-xl border border-neutral-900 bg-neutral-950 p-5 text-sm leading-relaxed text-neutral-300"></div>
+    </div>
+
+    <div class="mt-8 border-t border-neutral-900 pt-5">
+      <div class="text-[11px] uppercase tracking-wide text-neutral-500">versions</div>
+      <table class="mt-2 w-full text-sm">
+        <thead class="text-left text-neutral-500">
+          <tr><th class="py-1 font-normal">tag</th><th class="font-normal">flags</th><th class="font-normal">dependencies</th></tr>
+        </thead>
+        <tbody id="d-versions" class="divide-y divide-neutral-900 text-neutral-400"></tbody>
+      </table>
+    </div>
   </section>
 </main>
 
 <script>
 const state = { all: [], byPath: new Map() };
+const parts = p => p.split(".");
+const repoPath = e => parts(e.path).slice(0, -1).join("/");
+const repoLabel = e => parts(e.path).slice(0, -1).join(".");
+const repoURL = e => "https://" + repoLabel(e);
+const treeURL = e => repoURL(e) + "/tree/" + e.tag + "/" + (e.dir || "");
+const rawURL = (e, file) => {
+  const host = parts(e.path)[0];
+  const rest = parts(e.path).slice(1, -1).join("/");
+  if (host === "github") return "https://raw.githubusercontent.com/" + rest + "/" + e.tag + "/" + (e.dir || "") + "/" + file;
+  if (host === "gitlab") return "https://gitlab.com/" + rest + "/-/raw/" + e.tag + "/" + (e.dir || "") + "/" + file;
+  return repoURL(e) + "/raw/" + e.tag + "/" + (e.dir || "") + "/" + file;
+};
 
-function badge(t, cls) {
+function badge(text, cls) {
   const s = document.createElement("span");
-  s.textContent = t;
-  s.className = "rounded px-1.5 py-0.5 text-xs font-medium " + cls;
+  s.textContent = text;
+  s.className = "rounded px-1.5 py-0.5 text-[11px] font-medium " + cls;
   return s;
 }
 
 function row(e) {
-  const a = document.createElement("a");
-  a.href = "#/" + e.path;
-  a.className = "block px-4 py-3 hover:bg-slate-50";
-  const top = document.createElement("div");
-  top.className = "flex flex-wrap items-baseline gap-2";
-  const name = document.createElement("span");
-  name.className = "font-medium text-slate-900 break-all";
-  name.textContent = e.path;
+  const li = document.createElement("li");
+  li.className = "px-4 py-3 hover:bg-neutral-900/60";
+  const line = document.createElement("div");
+  line.className = "flex items-baseline gap-3";
+
+  const left = document.createElement("div");
+  left.className = "flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0";
+  const name = document.createElement("a");
+  name.href = "#/" + encodeURIComponent(e.path);
+  name.className = "font-semibold text-white hover:text-emerald-400";
+  name.textContent = e.pkg;
   const ver = document.createElement("span");
-  ver.className = "text-xs text-slate-500";
+  ver.className = "rounded bg-neutral-800 px-1.5 py-0.5 text-[11px] text-neutral-300";
   ver.textContent = e.version;
-  top.append(name, ver);
-  if (e.ffi) top.append(badge("ffi", "bg-amber-100 text-amber-800"));
-  if (e.runtime) top.append(badge("runtime", "bg-sky-100 text-sky-800"));
+  left.append(name, ver);
+  if (e.ffi) left.append(badge("ffi", "bg-amber-500/15 text-amber-300"));
+  if (e.runtime) left.append(badge("runtime", "bg-sky-500/15 text-sky-300"));
+
+  const link = document.createElement("a");
+  link.href = treeURL(e);
+  link.target = "_blank";
+  link.rel = "noreferrer";
+  link.title = "open " + (e.dir || "repository") + " on GitHub";
+  link.className = "ml-auto shrink-0 truncate text-xs text-neutral-500 hover:text-emerald-400";
+  link.textContent = repoLabel(e) + " ↗";
+
+  line.append(left, link);
   const desc = document.createElement("div");
-  desc.className = "mt-0.5 text-sm text-slate-600";
-  desc.textContent = e.description || "";
-  a.append(top, desc);
-  return a;
+  desc.className = "mt-0.5 text-sm text-neutral-400 truncate";
+  desc.textContent = e.description || "no description";
+  li.append(line, desc);
+  return li;
 }
 
 function render() {
   const q = document.getElementById("q").value.trim().toLowerCase();
   const hits = state.all.filter(e =>
-    !q || (e.path + " " + (e.description || "") + " " + (e.keywords || []).join(" ")).toLowerCase().includes(q));
-  const list = document.getElementById("list");
-  list.replaceChildren(...hits.map(row));
-  document.getElementById("count").textContent =
-    hits.length + " of " + state.all.length + " package versions";
+    !q || (e.pkg + " " + (e.description || "") + " " + (e.keywords || []).join(" ") + " " + e.path).toLowerCase().includes(q));
+  document.getElementById("list").replaceChildren(...hits.map(row));
+  document.getElementById("count").textContent = hits.length + " of " + state.all.length + " package versions";
+}
+
+function meta(key, value, href) {
+  const dl = document.getElementById("d-meta");
+  const dt = document.createElement("dt");
+  dt.className = "text-neutral-500";
+  dt.textContent = key;
+  const dd = document.createElement("dd");
+  if (href) {
+    const a = document.createElement("a");
+    a.href = href; a.target = "_blank"; a.rel = "noreferrer";
+    a.className = "text-emerald-400 hover:underline";
+    a.textContent = value;
+    dd.append(a);
+  } else {
+    dd.textContent = value;
+  }
+  dl.append(dt, dd);
+}
+
+async function loadReadme(e) {
+  const wrap = document.getElementById("d-readme-wrap");
+  const box = document.getElementById("d-readme");
+  wrap.classList.add("hidden");
+  box.replaceChildren();
+  if (!e.readme && !e.dir) return;
+  try {
+    const res = await fetch(rawURL(e, e.readme || "README.md"));
+    if (!res.ok) return;
+    const text = await res.text();
+    const html = marked.parse(text);
+    box.innerHTML = DOMPurify.sanitize(html);
+    box.querySelectorAll("a").forEach(a => { a.target = "_blank"; a.rel = "noreferrer"; });
+    wrap.classList.remove("hidden");
+  } catch (_) { /* no readme, no problem */ }
 }
 
 function showDetail(path) {
   const versions = state.byPath.get(path) || [];
   if (!versions.length) return false;
   const last = versions[versions.length - 1];
-  document.getElementById("list").classList.add("hidden");
+
+  document.getElementById("browse").classList.add("hidden");
   document.getElementById("detail").classList.remove("hidden");
-  document.getElementById("d-path").textContent = path;
-  document.getElementById("d-desc").textContent = last.description || "";
-  const parts = path.split(".");
-  const lib = parts.pop();
-  const repo = "https://" + parts.join("/");
-  document.getElementById("d-cmd").textContent =
-    "bojo get " + repo + "@" + last.version + " --lib " + lib;
+
+  document.getElementById("d-pkg").textContent = last.pkg;
+  document.getElementById("d-ver").textContent = last.version;
+  document.getElementById("d-desc").textContent = last.description || "no description";
+  const repo = document.getElementById("d-repo");
+  repo.href = treeURL(last);
+  repo.textContent = repoLabel(last) + "/" + (last.dir || "") + " ↗";
+
+  const cmd = "bojo get " + repoURL(last) + "#" + last.pkg + "@" + last.version;
+  document.getElementById("d-cmd").textContent = cmd;
+  document.getElementById("d-copy").onclick = () => navigator.clipboard.writeText(cmd);
+
+  const dl = document.getElementById("d-meta");
+  dl.replaceChildren();
+  if (last.license) meta("license", last.license);
+  if (last.homepage) meta("homepage", last.homepage, last.homepage);
+  if ((last.keywords || []).length) meta("keywords", last.keywords.join(", "));
+  if (last.ffi) meta("native", "ffi");
+  if ((last.hooks || []).length) meta("hooks", last.hooks.join(", ") + "  (runs only after bojo allow)");
+  if (last.docs) meta("docs", last.docs + "  (bojo docs " + last.pkg + ")");
+
   const body = document.getElementById("d-versions");
-  body.replaceChildren(...versions.map(v => {
+  body.replaceChildren(...versions.slice().reverse().map(v => {
     const tr = document.createElement("tr");
-    const td = (txt) => { const c = document.createElement("td"); c.className = "py-1"; c.textContent = txt; return c; };
+    const cell = t => { const c = document.createElement("td"); c.className = "py-1"; c.textContent = t; return c; };
     const flags = [v.ffi ? "ffi" : "", v.runtime ? "runtime" : ""].filter(Boolean).join(" ") || "—";
-    tr.append(td(v.version), td(flags), td((v.deps || []).join("\n") || "—"));
+    const deps = (v.deps || []).map(d => d.split(".").pop()).join(", ") || "—";
+    tr.append(cell(v.tag), cell(flags), cell(deps));
     return tr;
   }));
+
+  loadReadme(last);
   return true;
 }
 
 function route() {
   const path = decodeURIComponent(location.hash.replace(/^#\/?/, ""));
   document.getElementById("detail").classList.add("hidden");
-  document.getElementById("list").classList.remove("hidden");
+  document.getElementById("browse").classList.remove("hidden");
   if (path && showDetail(path)) return;
   render();
 }
@@ -123,7 +229,6 @@ async function load() {
     state.byPath.get(e.path).push(e);
   }
   for (const [, v] of state.byPath) v.sort((a, b) => a.version.localeCompare(b.version, undefined, { numeric: true }));
-  document.getElementById("stamp").textContent = "last build " + new Date(res.headers.get("last-modified") || Date.now()).toLocaleString();
   render();
 }
 
